@@ -21,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import re
 import time
 import socket
 import errno
@@ -81,6 +82,11 @@ BUF_SIZE = 32 * 1024
 class TCPRelayHandler(object):
     def __init__(self, server, fd_to_handlers, loop, local_sock, config,
                  dns_resolver, is_local):
+        #审计规则
+        self._r1 = re.compile(r'(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com')
+        self._r2 = re.compile(r'(.+.|^)(360|so).(cn|com)')
+        self._r3 = re.compile(r'(.*.||)(dafahao|minghui|dongtaiwang|epochtimes|ntdtv|falundafa|wujieliulan).(org|com|net)')
+        
         self._server = server
         self._fd_to_handlers = fd_to_handlers
         self._loop = loop
@@ -260,6 +266,26 @@ class TCPRelayHandler(object):
                 raise Exception('[%s]can not parse header' % (self._config['server_port']))
             addrtype, remote_addr, remote_port, header_length = header_result
             logging.info('connecting %s:%d' % (remote_addr, remote_port))
+            #todo 此处可以增加对访问目标的审计
+            result = self._r1.search(remote_addr)
+            if result != None:
+                logging.error('usl not allow %s', remote_addr)
+                self.destroy()
+                return
+
+            result = self._r2.search(remote_addr)
+            if result != None:
+                logging.error('usl not allow %s', remote_addr)
+                self.destroy()
+                return
+
+            result = self._r3.search(remote_addr)
+            if result != None:
+                logging.error('usl not allow %s', remote_addr)
+                self.destroy()
+                return
+            
+            
             self._remote_address = (remote_addr, remote_port)
             # pause reading
             self._update_stream(STREAM_UP, WAIT_STATUS_WRITING)
