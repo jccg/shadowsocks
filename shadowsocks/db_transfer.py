@@ -51,8 +51,9 @@ class DbTransfer(object):
         query_sub_in = None
         last_time = time.time()
         for id in dt_transfer.keys():
-            query_sub_when += ' WHEN %s THEN u+%s' % (id, dt_transfer[id][0])
-            query_sub_when2 += ' WHEN %s THEN d+%s' % (id, dt_transfer[id][1])
+            #此处记录流量统计数据
+            query_sub_when += ' WHEN %s THEN u+%s' % (id, dt_transfer[id][0] * 1)
+            query_sub_when2 += ' WHEN %s THEN d+%s' % (id, dt_transfer[id][1] * 1)
             if query_sub_in is not None:
                 query_sub_in += ',%s' % id
             else:
@@ -78,6 +79,7 @@ class DbTransfer(object):
         conn = cymysql.connect(host=Config.MYSQL_HOST, port=Config.MYSQL_PORT, user=Config.MYSQL_USER,
                                passwd=Config.MYSQL_PASS, db=Config.MYSQL_DB, charset='utf8')
         cur = conn.cursor()
+        #此处获取用户信息，可过滤符合条件的用户
         cur.execute("SELECT port, u, d, transfer_enable, passwd, switch, enable FROM user")
         rows = []
         for r in cur.fetchall():
@@ -125,7 +127,7 @@ class DbTransfer(object):
             except Exception as e:
                 logging.warn('db thread except:%s' % e)
             finally:
-                time.sleep(15)
+                time.sleep(20)
 
 
 #SQLData.pull_db_all_user()
