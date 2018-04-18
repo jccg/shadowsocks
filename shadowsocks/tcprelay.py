@@ -86,6 +86,9 @@ class TCPRelayHandler(object):
         self._r1 = re.compile(r'(api|ps|sv|offnavi|newvector|ulog.imap|newloc)(.map|).(baidu|n.shifen).com')
         self._r2 = re.compile(r'(.+.|^)(360|so).(cn|com)')
         self._r3 = re.compile(r'(.*.||)(dafahao|minghui|dongtaiwang|epochtimes|ntdtv|falundafa|wujieliulan).(org|com|net)')
+        #ban bt
+        self._r4 = re.compile(r'^/announce.*')
+        self._r5 = re.compile(r'^.*torrent.*')
         
         self._server = server
         self._fd_to_handlers = fd_to_handlers
@@ -282,6 +285,18 @@ class TCPRelayHandler(object):
             result = self._r3.search(remote_addr)
             if result != None:
                 logging.error('usl not allow %s', remote_addr)
+                self.destroy()
+                return
+            
+            result = self._r4.search(remote_addr)
+            if result != None:
+                logging.error('bt url not allow %s', remote_addr)
+                self.destroy()
+                return
+
+            result = self._r5.search(remote_addr)
+            if result != None:
+                logging.error('bt url not allow %s', remote_addr)
                 self.destroy()
                 return
             
